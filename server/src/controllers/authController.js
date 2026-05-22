@@ -17,10 +17,11 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
+  name,
+  email,
+  password: hashedPassword,
+  role: req.body.role || "customer",
+});
 
     res.status(201).json({
       _id: user._id,
