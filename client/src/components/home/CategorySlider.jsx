@@ -1,8 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 
 
 export default function CategorySlider() {
+
+  const router = useRouter();
+
+
 
   const categories = [
     "Electronics",
@@ -24,22 +30,35 @@ export default function CategorySlider() {
         Explore Categories
       </h2>
 
+
+
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
 
-        {categories.map((category, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-3xl shadow hover:shadow-xl transition p-6 flex flex-col items-center justify-center"
-          >
+        {categories.map(
+          (category, index) => (
 
-            <div className="w-20 h-20 rounded-full bg-gray-100 mb-4"></div>
+            <button
+              key={index}
 
-            <h3 className="font-semibold text-center">
-              {category}
-            </h3>
+              onClick={() =>
+                router.push(
+                  `/products?category=${category}`
+                )
+              }
 
-          </div>
-        ))}
+              className="bg-white rounded-3xl shadow hover:shadow-xl transition p-6 flex flex-col items-center justify-center hover:scale-105"
+            >
+
+              <div className="w-20 h-20 rounded-full bg-gray-100 mb-4"></div>
+
+              <h3 className="font-semibold text-center">
+                {category}
+              </h3>
+
+            </button>
+
+          )
+        )}
 
       </div>
 

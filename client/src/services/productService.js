@@ -2,52 +2,15 @@ import API from "./axios";
 
 
 
-/*
-|--------------------------------------------------------------------------
-| GET ALL PRODUCTS
-|--------------------------------------------------------------------------
-*/
+export const getProducts =
+  async (
+    keyword = "",
+    category = ""
+  ) => {
 
-export const getProducts = async () => {
-  const { data } = await API.get(
-    "/products"
-  );
-
-  return data;
-};
-
-
-
-/*
-|--------------------------------------------------------------------------
-| CREATE PRODUCT
-|--------------------------------------------------------------------------
-*/
-
-export const createProduct =
-  async (productData) => {
-    const { data } =
-      await API.post(
-        "/products",
-        productData
-      );
-
-    return data;
-  };
-
-
-
-/*
-|--------------------------------------------------------------------------
-| GET SINGLE PRODUCT
-|--------------------------------------------------------------------------
-*/
-
-export const getSingleProduct =
-  async (id) => {
     const { data } =
       await API.get(
-        `/products/${id}`
+        `/products?keyword=${keyword}&category=${category}`
       );
 
     return data;
@@ -55,16 +18,11 @@ export const getSingleProduct =
 
 
 
-/*
-|--------------------------------------------------------------------------
-| DELETE PRODUCT
-|--------------------------------------------------------------------------
-*/
-
-export const deleteProduct =
+export const getProduct =
   async (id) => {
+
     const { data } =
-      await API.delete(
+      await API.get(
         `/products/${id}`
       );
 
