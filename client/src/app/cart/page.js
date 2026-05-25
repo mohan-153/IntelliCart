@@ -1,66 +1,116 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
 
-import API from "@/services/axios";
+import Link from "next/link";
 
+import { useSelector,
+  useDispatch }
+from "react-redux";
 
+import {
+  removeFromCart,
+} from "@/redux/slices/cartSlice";
 
 export default function CartPage() {
-  const [cart, setCart] = useState(null);
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  const dispatch =
+    useDispatch();
 
-  const fetchCart = async () => {
-    try {
-      const { data } = await API.get("/cart");
-
-      setCart(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  if (!cart) {
-    return (
-      <div className="p-10">
-        Loading Cart...
-      </div>
+  const cartItems =
+    useSelector(
+      (state) =>
+        state.cart.cartItems
     );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold mb-8">
+    <div className="max-w-7xl mx-auto px-4 py-10">
+
+      <h1 className="text-5xl font-bold mb-10">
+
         Shopping Cart
+
       </h1>
 
-      <div className="space-y-5">
-        {cart.products.map((item) => (
-          <div
-            key={item.product._id}
-            className="bg-white p-5 rounded-xl shadow flex justify-between"
+      {cartItems.length === 0 ? (
+
+        <div>
+
+          <h2 className="text-2xl">
+
+            Cart is Empty
+
+          </h2>
+
+          <Link
+            href="/products"
+            className="text-blue-500"
           >
-            <div>
-              <h2 className="text-xl font-bold">
-                {item.product.title}
-              </h2>
 
-              <p>
-                Quantity: {item.quantity}
-              </p>
-            </div>
+            Go Shopping
 
-            <h2 className="text-xl font-bold">
-              ₹
-              {item.product.price *
-                item.quantity}
-            </h2>
-          </div>
-        ))}
-      </div>
+          </Link>
+
+        </div>
+
+      ) : (
+
+        <div className="space-y-6">
+
+          {cartItems.map(
+            (item) => (
+
+              <div
+                key={item._id}
+                className="bg-white p-5 rounded-3xl shadow flex items-center gap-6"
+              >
+
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-40 h-40 object-cover rounded-2xl"
+                />
+
+                <div className="flex-1">
+
+                  <h2 className="text-2xl font-bold">
+
+                    {item.name}
+
+                  </h2>
+
+                  <p className="text-3xl font-bold mt-3">
+
+                    ₹{item.price}
+
+                  </p>
+
+                </div>
+
+                <button
+                  onClick={() =>
+                    dispatch(
+                      removeFromCart(
+                        item._id
+                      )
+                    )
+                  }
+                  className="bg-red-500 text-white px-5 py-3 rounded-xl"
+                >
+
+                  Remove
+
+                </button>
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+      )}
+
     </div>
   );
 }

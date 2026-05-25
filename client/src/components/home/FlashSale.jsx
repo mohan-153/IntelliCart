@@ -1,50 +1,225 @@
 "use client";
 
+import { useEffect, useState } from "react";
 
+import API from "@/services/axios";
 
 export default function FlashSale() {
+
+  const [sale, setSale] =
+    useState(null);
+
+  const [timeLeft, setTimeLeft] =
+    useState(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | GET FLASH SALE
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+
+    const fetchSale =
+      async () => {
+
+        try {
+
+          const { data } =
+            await API.get(
+              "/flash-sale"
+            );
+
+          setSale(data);
+
+        } catch (error) {
+
+          console.log(error);
+
+        }
+
+      };
+
+    fetchSale();
+
+  }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | TIMER
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+
+    if (!sale || !sale.active)
+      return;
+
+    const endTime =
+      new Date(
+        sale.createdAt
+      ).getTime() +
+      sale.hours *
+        60 *
+        60 *
+        1000;
+
+    const timer =
+      setInterval(() => {
+
+        const now =
+          new Date().getTime();
+
+        const distance =
+          endTime - now;
+
+        if (distance <= 0) {
+
+          clearInterval(
+            timer
+          );
+
+          setSale(null);
+
+          return;
+
+        }
+
+        const hours =
+          Math.floor(
+            distance /
+              (1000 *
+                60 *
+                60)
+          );
+
+        const minutes =
+          Math.floor(
+            (distance %
+              (1000 *
+                60 *
+                60)) /
+              (1000 * 60)
+          );
+
+        const seconds =
+          Math.floor(
+            (distance %
+              (1000 * 60)) /
+              1000
+          );
+
+        setTimeLeft({
+          hours,
+          minutes,
+          seconds,
+        });
+
+      }, 1000);
+
+    return () =>
+      clearInterval(timer);
+
+  }, [sale]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | HIDE SECTION
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    !sale ||
+    !sale.active ||
+    !timeLeft
+  ) {
+    return null;
+  }
+
   return (
-    <section className="bg-black text-white rounded-3xl p-10 py-16 my-10 text-center">
+    <section className="max-w-7xl mx-auto px-4 py-16">
 
-      <h2 className="text-5xl font-bold">
-        Flash Sale
-      </h2>
+      <div className="bg-black rounded-[40px] text-white py-20 text-center">
 
-      <p className="text-xl mt-6 text-gray-300">
-        Up To 70% OFF Limited Time
-      </p>
+        <h2 className="text-6xl font-bold">
 
-      <div className="flex justify-center gap-6 mt-10">
+          Flash Sale
 
-        <TimeBox value="12" label="Hours" />
+        </h2>
 
-        <TimeBox value="25" label="Minutes" />
+        <p className="text-2xl mt-6">
 
-        <TimeBox value="40" label="Seconds" />
+          Up To 70% OFF
+          Limited Time
+
+        </p>
+
+        <div className="flex justify-center gap-8 mt-14">
+
+          {/* HOURS */}
+
+          <div className="bg-white text-black rounded-3xl px-10 py-8">
+
+            <h3 className="text-6xl font-bold">
+
+              {
+                timeLeft.hours
+              }
+
+            </h3>
+
+            <p className="mt-3 text-xl">
+
+              Hours
+
+            </p>
+
+          </div>
+
+          {/* MINUTES */}
+
+          <div className="bg-white text-black rounded-3xl px-10 py-8">
+
+            <h3 className="text-6xl font-bold">
+
+              {
+                timeLeft.minutes
+              }
+
+            </h3>
+
+            <p className="mt-3 text-xl">
+
+              Minutes
+
+            </p>
+
+          </div>
+
+          {/* SECONDS */}
+
+          <div className="bg-white text-black rounded-3xl px-10 py-8">
+
+            <h3 className="text-6xl font-bold">
+
+              {
+                timeLeft.seconds
+              }
+
+            </h3>
+
+            <p className="mt-3 text-xl">
+
+              Seconds
+
+            </p>
+
+          </div>
+
+        </div>
 
       </div>
 
     </section>
-  );
-}
-
-
-
-function TimeBox({
-  value,
-  label,
-}) {
-  return (
-    <div className="bg-white text-black px-8 py-5 rounded-2xl">
-
-      <h3 className="text-4xl font-bold">
-        {value}
-      </h3>
-
-      <p className="mt-2">
-        {label}
-      </p>
-
-    </div>
   );
 }

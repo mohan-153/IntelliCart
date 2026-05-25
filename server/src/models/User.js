@@ -1,26 +1,25 @@
-import mongoose from "mongoose";
-
-const userSchema = new mongoose.Schema(
+import mongoose from "mongoose"
+const userSchema = mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
+    name: String,
 
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+    email: String,
 
-    password: {
-      type: String,
-      required: true,
-    },
+    password: String,
 
     role: {
       type: String,
       default: "customer",
+    },
+
+    address: {
+      fullName: String,
+      mobile: String,
+      addressLine: String,
+      city: String,
+      state: String,
+      postalCode: String,
+      country: String,
     },
   },
   {

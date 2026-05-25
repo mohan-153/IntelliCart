@@ -20,14 +20,37 @@ export default function ProfilePage() {
   const [user, setUser] =
     useState(null);
 
-
+const [address, setAddress] =
+  useState({
+    fullName: "",
+    mobile: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
 
   useEffect(() => {
     fetchProfile();
   }, []);
 
 
+const saveAddress = async () => {
 
+  const user = JSON.parse(
+    localStorage.getItem(
+      "userInfo"
+    )
+  );
+
+  await API.put(
+    `/users/profile/${user._id}`,
+    address
+  );
+
+  alert("Address Saved");
+};
   const fetchProfile = async () => {
     try {
 

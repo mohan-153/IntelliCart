@@ -4,58 +4,19 @@ import Product from "../models/Product.js";
 
 /*
 |--------------------------------------------------------------------------
-| GET PRODUCTS
+| GET ALL PRODUCTS
 |--------------------------------------------------------------------------
 */
 
 export const getProducts =
   async (req, res) => {
 
-    try {
+    const products =
+      await Product.find();
 
-      const keyword =
-        req.query.keyword
-          ? {
-              name: {
-                $regex:
-                  req.query.keyword,
-                $options: "i",
-              },
-            }
-          : {};
+    res.json(products);
 
-
-
-      const category =
-        req.query.category
-          ? {
-              category:
-                req.query.category,
-            }
-          : {};
-
-
-
-      const products =
-        await Product.find({
-          ...keyword,
-          ...category,
-        });
-
-
-
-      res.json(products);
-
-    } catch (error) {
-
-      res.status(500).json({
-        message:
-          error.message,
-      });
-
-    }
-
-  };
+};
 
 
 
@@ -75,8 +36,6 @@ export const getProductById =
           req.params.id
         );
 
-
-
       if (!product) {
 
         return res
@@ -88,17 +47,15 @@ export const getProductById =
 
       }
 
-
-
       res.json(product);
 
     } catch (error) {
 
       res.status(500).json({
         message:
-          error.message,
+          "Server Error",
       });
 
     }
 
-  };
+};

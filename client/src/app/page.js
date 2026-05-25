@@ -12,20 +12,17 @@ import DealsSection from "@/components/home/DealsSection";
 
 import BrandGrid from "@/components/home/BrandGrid";
 
-import BannerGrid from "@/components/home/BannerGrid";
 
 import ProductCarousel from "@/components/home/ProductCarousel";
 
 import FlashSale from "@/components/home/FlashSale";
 
-import Newsletter from "@/components/home/Newsletter";
 
 
 
 export default function HomePage() {
   return (
     <>
-      <Navbar />
 
       <main className="bg-gray-100 min-h-screen">
 
@@ -41,6 +38,9 @@ export default function HomePage() {
 
           <CategorySlider />
 
+          {/* FLASH SALE */}
+
+          <FlashSale />
 
 
           {/* DEALS */}
@@ -55,27 +55,15 @@ export default function HomePage() {
 
 
 
-          {/* BANNERS */}
-
-          <BannerGrid />
-
-
-
           {/* PRODUCTS */}
 
           <ProductCarousel />
 
 
 
-          {/* FLASH SALE */}
-
-          <FlashSale />
 
 
 
-          {/* NEWSLETTER */}
-
-          <Newsletter />
 
         </div>
 

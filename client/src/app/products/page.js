@@ -1,121 +1,185 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
-import { useSearchParams }
-  from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
-import {
-  getProducts,
-} from "@/services/productService";
+import Link from "next/link";
 
-
+import API from "@/services/axios";
 
 export default function ProductsPage() {
 
-  const params =
+  const searchParams =
     useSearchParams();
 
-
+  const category =
+    searchParams.get(
+      "category"
+    ) || "";
 
   const keyword =
-    params.get("keyword") || "";
+    searchParams.get(
+      "keyword"
+    ) || "";
 
-
-
-  const category =
-    params.get("category") || "";
-
-
-
-  const [products,
-    setProducts] =
+  const [products, setProducts] =
     useState([]);
 
+  const [loading, setLoading] =
+    useState(true);
 
-
+  /*
+  |--------------------------------------------------------------------------
+  | FETCH PRODUCTS
+  |--------------------------------------------------------------------------
+  */
 
   useEffect(() => {
+
+    const fetchProducts =
+      async () => {
+
+        try {
+
+          setLoading(true);
+
+          const { data } =
+            await API.get(
+              `/products?keyword=${keyword}&category=${category}`
+            );
+
+          setProducts(data);
+
+        } catch (error) {
+
+          console.log(error);
+
+        } finally {
+
+          setLoading(false);
+
+        }
+
+      };
 
     fetchProducts();
 
   }, [keyword, category]);
 
-
-
-  const fetchProducts =
-    async () => {
-
-      const data =
-        await getProducts(
-          keyword,
-          category
-        );
-
-      setProducts(data);
-
-    };
-
-
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
 
-      <h1 className="text-4xl font-bold mb-10">
+      {/* TITLE */}
 
-        Products
+      <div className="mb-10">
 
-      </h1>
+        <h1 className="text-5xl font-bold">
 
+          {category
+            ? `${category} Products`
+            : "Products"}
 
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <p className="text-gray-500 mt-3 text-lg">
 
-        {products.map(
-          (product) => (
+          {category
+            ? `Showing products in ${category}`
+            : "Explore all available products"}
+
+        </p>
+
+      </div>
+
+      {/* LOADING */}
+
+      {loading ? (
+
+        <h2 className="text-2xl font-semibold">
+
+          Loading...
+
+        </h2>
+
+      ) : products.length === 0 ? (
+
+        <h2 className="text-2xl font-semibold">
+
+          No Products Found
+
+        </h2>
+
+      ) : (
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+
+          {products.map((product) => (
 
             <div
               key={product._id}
-              className="bg-white rounded-3xl shadow p-5"
+              className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300"
             >
 
-              <img
-                src={
-                  product.image
-                }
-                alt={
-                  product.name
-                }
-                className="w-full h-60 object-cover rounded-2xl"
-              />
+              {/* IMAGE */}
 
-              <h2 className="text-xl font-bold mt-5">
+              <div className="h-72 overflow-hidden">
 
-                {product.name}
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
 
-              </h2>
+              </div>
 
-              <p className="text-gray-500 mt-2">
+              {/* CONTENT */}
 
-                {product.category}
+              <div className="p-5">
 
-              </p>
+                <p className="text-gray-500 text-sm">
 
-              <p className="text-2xl font-bold mt-4">
+                  {product.category}
 
-                ₹{product.price}
+                </p>
 
-              </p>
+                <h2 className="text-2xl font-bold mt-2 line-clamp-2">
+
+                  {product.name}
+
+                </h2>
+
+                <div className="flex items-center justify-between mt-5">
+
+                  <p className="text-3xl font-bold">
+
+                    ₹{product.price}
+
+                  </p>
+
+                  <Link
+                    href={`/products/${product._id}`}
+                  >
+
+                    <button className="bg-black text-white px-5 py-2 rounded-xl">
+
+                      View
+
+                    </button>
+
+                  </Link>
+
+                </div>
+
+              </div>
 
             </div>
 
-          )
-        )}
+          ))}
 
-      </div>
+        </div>
+
+      )}
 
     </div>
   );
