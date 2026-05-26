@@ -23,9 +23,10 @@ export default function RootLayout({
   */
 
   const hideNavbar =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/admin/login";
+  pathname === "/login" ||
+  pathname === "/register" ||
+  pathname === "/forgot-password" ||
+  pathname === "/admin/login";
 
   return (
     <html lang="en">

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 import API from "@/services/axios";
+import BackButton from "@/components/BackButton";
 
 export default function CheckoutPage() {
 
@@ -39,14 +40,14 @@ export default function CheckoutPage() {
 
     const storedProduct =
       JSON.parse(
-        localStorage.getItem(
+        sessionStorage.getItem(
           "checkoutProduct"
         )
       );
 
     const storedUser =
       JSON.parse(
-        localStorage.getItem(
+        sessionStorage.getItem(
           "userInfo"
         )
       );
@@ -168,7 +169,7 @@ export default function CheckoutPage() {
 
         const storedUser =
           JSON.parse(
-            localStorage.getItem(
+            sessionStorage.getItem(
               "userInfo"
             )
           );
@@ -234,7 +235,7 @@ export default function CheckoutPage() {
         |--------------------------------------------------------------------------
         */
 
-        localStorage.setItem(
+        sessionStorage.setItem(
           "userInfo",
           JSON.stringify({
             ...storedUser,
@@ -283,6 +284,12 @@ export default function CheckoutPage() {
   }
 
   return (
+
+    <>
+  <BackButton />
+
+
+
     <div className="max-w-7xl mx-auto p-10">
 
       <h1 className="text-5xl font-bold mb-10">
@@ -483,6 +490,8 @@ export default function CheckoutPage() {
       </div>
 
     </div>
+
+    </>
   );
 
 }

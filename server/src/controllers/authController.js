@@ -1,64 +1,194 @@
-import bcrypt from "bcryptjs";
 import User from "../models/User.js";
-import generateToken from "../utils/generateToken.js";
 
-const registerUser = async (req, res) => {
+import bcrypt from "bcryptjs";
+
+import jwt from "jsonwebtoken";
+
+
+
+// REGISTER USER
+export const registerUser = async (req, res) => {
+
   try {
-    const { name, email, password } = req.body;
 
-    const userExists = await User.findOne({ email });
+    const {
+      name,
+      email,
+      password,
+    } = req.body;
 
-    if (userExists) {
+    // CHECK USER
+    const existingUser =
+      await User.findOne({ email });
+
+    if (existingUser) {
       return res.status(400).json({
         message: "User already exists",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // HASH PASSWORD
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
 
+    // CREATE USER
     const user = await User.create({
-  name,
-  email,
-  password: hashedPassword,
-  role: req.body.role || "customer",
-});
+      name,
+      email,
+      password: hashedPassword,
+      role: "customer",
+    });
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
+      message: "User registered successfully",
+      user,
     });
+
   } catch (error) {
+
+    console.log(error);
+
     res.status(500).json({
-      message: error.message,
+      message: "Server Error",
     });
+
   }
 };
 
-const loginUser = async (req, res) => {
+
+
+// LOGIN USER
+export const loginUser = async (req, res) => {
+
   try {
-    const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const {
+      email,
+      password,
+    } = req.body;
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({
-        message: "Invalid credentials",
+    // CHECK USER
+    const user =
+      await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User account not found",
       });
     }
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
+
+    // CHECK PASSWORD
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
+      if (!isMatch) {
+      return res.status(400).json({
+        message: "Incorrect password",
+      });
+    }
+
+    // TOKEN
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    res.status(200).json({
+      message: "Login Successful",
+      token,
+      user,
     });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+
   }
 };
 
-export { registerUser, loginUser };
+
+
+// FORGOT PASSWORD
+export const forgotPassword = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const {
+      email,
+      newPassword,
+    } = req.body;
+
+    // CHECK EMAIL
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required",
+      });
+    }
+
+    // FIND USER
+    const user =
+      await User.findOne({ email });
+
+    // USER NOT FOUND
+    if (!user) {
+      return res.status(404).json({
+        message: "Email not found",
+      });
+    }
+
+    // ONLY VERIFY EMAIL
+    if (!newPassword) {
+
+      return res.status(200).json({
+        success: true,
+        verified: true,
+        message:
+          "Email verified successfully",
+      });
+
+    }
+
+    // HASH NEW PASSWORD
+    const hashedPassword =
+      await bcrypt.hash(
+        newPassword,
+        10
+      );
+
+    // UPDATE PASSWORD
+    user.password =
+      hashedPassword;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Password updated successfully",
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Server Error",
+    });
+
+  }
+};

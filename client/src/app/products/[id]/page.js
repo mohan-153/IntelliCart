@@ -14,6 +14,15 @@ import { useDispatch } from "react-redux";
 
 import { addToCart } from "@/redux/slices/cartSlice";
 
+import BackButton from "@/components/BackButton";
+
+import {
+  toast,
+  ToastContainer,
+} from "react-toastify";
+
+import "react-toastify/dist/ReactToastify.css";
+
 export default function ProductDetailsPage() {
 
   const params = useParams();
@@ -105,6 +114,55 @@ export default function ProductDetailsPage() {
 
   /*
   |--------------------------------------------------------------------------
+  | ADD TO CART
+  |--------------------------------------------------------------------------
+  */
+
+const addToCartHandler = () => {
+
+  // CHECK LOGIN
+  const user =
+    sessionStorage.getItem(
+      "userInfo"
+    );
+
+  const token =
+    sessionStorage.getItem(
+      "token"
+    );
+
+  // NOT LOGGED IN
+  if (!user || !token) {
+
+    // CLEAR OLD CART
+    sessionStorage.removeItem(
+      "cartItems"
+    );
+
+    toast.error(
+      "Please Login To Add Products"
+    );
+
+    setTimeout(() => {
+
+      router.push("/login");
+
+    }, 1500);
+
+    return;
+  }
+
+  // ADD PRODUCT
+  dispatch(
+    addToCart(product)
+  );
+
+  toast.success(
+    "Product Added To Cart"
+  );
+};
+  /*
+  |--------------------------------------------------------------------------
   | BUY NOW
   |--------------------------------------------------------------------------
   */
@@ -112,14 +170,22 @@ export default function ProductDetailsPage() {
   const buyNowHandler = () => {
 
     const user = JSON.parse(
-      localStorage.getItem(
+      sessionStorage.getItem(
         "userInfo"
       )
     );
 
     if (!user) {
 
-      router.push("/login");
+      toast.error(
+        "Please Login First"
+      );
+
+      setTimeout(() => {
+
+        router.push("/login");
+
+      }, 1500);
 
       return;
     }
@@ -130,7 +196,7 @@ export default function ProductDetailsPage() {
     |--------------------------------------------------------------------------
     */
 
-    localStorage.setItem(
+    sessionStorage.setItem(
       "checkoutProduct",
       JSON.stringify(product)
     );
@@ -138,6 +204,7 @@ export default function ProductDetailsPage() {
     router.push("/checkout");
 
   };
+
   /*
   |--------------------------------------------------------------------------
   | PLACE ORDER
@@ -149,7 +216,7 @@ export default function ProductDetailsPage() {
     try {
 
       const user = JSON.parse(
-        localStorage.getItem(
+        sessionStorage.getItem(
           "userInfo"
         )
       );
@@ -166,7 +233,7 @@ export default function ProductDetailsPage() {
         }
       );
 
-      alert(
+      toast.success(
         "Order placed successfully"
       );
 
@@ -176,7 +243,7 @@ export default function ProductDetailsPage() {
 
     } catch (error) {
 
-      alert(
+      toast.error(
         error.response?.data
           ?.message ||
         "Order Failed"
@@ -224,6 +291,18 @@ export default function ProductDetailsPage() {
 
   return (
     <>
+<>
+  <BackButton />
+
+  ...
+</>
+      {/* TOAST */}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+      />
+
       {/* ADDRESS MODAL */}
 
       {
@@ -441,32 +520,26 @@ export default function ProductDetailsPage() {
 
             <div className="flex gap-5">
 
+              {/* ADD TO CART */}
+
               <button
-                onClick={() => {
-
-                  dispatch(
-                    addToCart(
-                      product
-                    )
-                  );
-
-                  alert(
-                    "Product Added To Cart"
-                  );
-
-                }}
-                className="bg-black text-white px-8 py-4 rounded-2xl"
+                onClick={
+                  addToCartHandler
+                }
+                className="bg-black text-white px-8 py-4 rounded-2xl hover:bg-gray-800 transition"
               >
 
                 Add To Cart
 
               </button>
 
+              {/* BUY NOW */}
+
               <button
                 onClick={
                   buyNowHandler
                 }
-                className="border-2 border-black px-10 py-4 rounded-2xl text-2xl font-semibold"
+                className="border-2 border-black px-10 py-4 rounded-2xl text-2xl font-semibold hover:bg-black hover:text-white transition"
               >
 
                 Buy Now
@@ -480,6 +553,7 @@ export default function ProductDetailsPage() {
         </div>
 
       </div>
+
     </>
   );
 }

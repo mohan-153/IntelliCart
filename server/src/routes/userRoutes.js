@@ -8,6 +8,7 @@ import {
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 

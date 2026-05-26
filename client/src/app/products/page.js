@@ -6,7 +6,11 @@ import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 
+import Image from "next/image";
+
 import API from "@/services/axios";
+
+import BackButton from "@/components/BackButton";
 
 export default function ProductsPage() {
 
@@ -16,12 +20,7 @@ export default function ProductsPage() {
   const category =
     searchParams.get(
       "category"
-    ) || "";
-
-  const keyword =
-    searchParams.get(
-      "keyword"
-    ) || "";
+    );
 
   const [products, setProducts] =
     useState([]);
@@ -42,12 +41,17 @@ export default function ProductsPage() {
 
         try {
 
-          setLoading(true);
+          let url = "/products";
+
+          // CATEGORY FILTER
+          if (category) {
+
+            url += `?category=${category}`;
+
+          }
 
           const { data } =
-            await API.get(
-              `/products?keyword=${keyword}&category=${category}`
-            );
+            await API.get(url);
 
           setProducts(data);
 
@@ -65,122 +69,162 @@ export default function ProductsPage() {
 
     fetchProducts();
 
-  }, [keyword, category]);
+  }, [category]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOADING
+  |--------------------------------------------------------------------------
+  */
+
+  if (loading) {
+
+    return (
+      <div className="min-h-screen flex items-center justify-center text-3xl font-bold">
+
+        Loading Products...
+
+      </div>
+    );
+
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | GROUP PRODUCTS BY CATEGORY
+  |--------------------------------------------------------------------------
+  */
+
+  const groupedProducts =
+    products.reduce(
+      (acc, product) => {
+
+        const category =
+          product.category ||
+          "Other";
+
+        if (!acc[category]) {
+
+          acc[category] = [];
+
+        }
+
+        acc[category].push(
+          product
+        );
+
+        return acc;
+
+      },
+
+      {}
+    );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <>
 
-      {/* TITLE */}
+      <BackButton />
 
-      <div className="mb-10">
+      <div className="max-w-7xl mx-auto px-6 py-12">
 
-        <h1 className="text-5xl font-bold">
+        {/* PAGE TITLE */}
+
+        <h1 className="text-5xl font-bold mb-3">
 
           {category
             ? `${category} Products`
-            : "Products"}
+            : "All Products"}
 
         </h1>
 
-        <p className="text-gray-500 mt-3 text-lg">
+        <p className="text-gray-500 text-xl mb-12">
 
-          {category
-            ? `Showing products in ${category}`
-            : "Explore all available products"}
+          Explore all available products
 
         </p>
 
-      </div>
+        {/* CATEGORY SECTIONS */}
 
-      {/* LOADING */}
+        {Object.keys(
+          groupedProducts
+        ).map((categoryName) => (
 
-      {loading ? (
+          <div
+            key={categoryName}
+            className="mb-20"
+          >
 
-        <h2 className="text-2xl font-semibold">
+            {/* CATEGORY TITLE */}
 
-          Loading...
+            <h2 className="text-4xl font-bold mb-8">
 
-        </h2>
+              {categoryName}
 
-      ) : products.length === 0 ? (
+            </h2>
 
-        <h2 className="text-2xl font-semibold">
+            {/* PRODUCTS GRID */}
 
-          No Products Found
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
-        </h2>
+              {groupedProducts[
+                categoryName
+              ].map((product) => (
 
-      ) : (
+                <Link
+                  key={product._id}
+                  href={`/products/${product._id}`}
+                  className="bg-white rounded-3xl shadow hover:shadow-xl transition overflow-hidden"
+                >
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                  {/* IMAGE */}
 
-          {products.map((product) => (
+                  <div className="relative w-full h-80">
 
-            <div
-              key={product._id}
-              className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300"
-            >
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
 
-              {/* IMAGE */}
+                  </div>
 
-              <div className="h-72 overflow-hidden">
+                  {/* DETAILS */}
 
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                  <div className="p-5">
 
-              </div>
+                    <p className="text-gray-500 mb-2">
 
-              {/* CONTENT */}
+                      {product.category}
 
-              <div className="p-5">
+                    </p>
 
-                <p className="text-gray-500 text-sm">
+                    <h3 className="text-2xl font-bold line-clamp-2">
 
-                  {product.category}
+                      {product.name}
 
-                </p>
+                    </h3>
 
-                <h2 className="text-2xl font-bold mt-2 line-clamp-2">
+                    <p className="text-3xl font-bold mt-4">
 
-                  {product.name}
+                      ₹{product.price}
 
-                </h2>
+                    </p>
 
-                <div className="flex items-center justify-between mt-5">
+                  </div>
 
-                  <p className="text-3xl font-bold">
+                </Link>
 
-                    ₹{product.price}
-
-                  </p>
-
-                  <Link
-                    href={`/products/${product._id}`}
-                  >
-
-                    <button className="bg-black text-white px-5 py-2 rounded-xl">
-
-                      View
-
-                    </button>
-
-                  </Link>
-
-                </div>
-
-              </div>
+              ))}
 
             </div>
 
-          ))}
+          </div>
 
-        </div>
+        ))}
 
-      )}
+      </div>
 
-    </div>
+    </>
   );
 }

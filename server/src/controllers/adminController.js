@@ -1,188 +1,113 @@
 import User from "../models/User.js";
+
 import Product from "../models/Product.js";
+
 import Order from "../models/Order.js";
 
+/*
+|--------------------------------------------------------------------------
+| ADMIN ANALYTICS
+|--------------------------------------------------------------------------
+*/
 
+const getDashboardAnalytics =
+  async (req, res) => {
 
-// @desc    Get Admin Dashboard Statistics
-// @route   GET /api/admin/dashboard
-// @access  Private/Admin
+    try {
 
-const getDashboardStats = async (req, res) => {
-  try {
-    // TOTAL USERS
-    const totalUsers = await User.countDocuments();
+      /*
+      |--------------------------------------------------------------------------
+      | TOTAL USERS
+      |--------------------------------------------------------------------------
+      */
 
-    // TOTAL PRODUCTS
-    const totalProducts = await Product.countDocuments();
+      const totalUsers =
+        await User.countDocuments();
 
-    // TOTAL ORDERS
-    const totalOrders = await Order.countDocuments();
+      /*
+      |--------------------------------------------------------------------------
+      | TOTAL PRODUCTS
+      |--------------------------------------------------------------------------
+      */
 
-    // TOTAL REVENUE
-    const revenueResult = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: {
-            $sum: "$totalAmount",
+      const totalProducts =
+        await Product.countDocuments();
+
+      /*
+      |--------------------------------------------------------------------------
+      | TOTAL ORDERS
+      |--------------------------------------------------------------------------
+      */
+
+      const totalOrders =
+        await Order.countDocuments();
+
+      /*
+      |--------------------------------------------------------------------------
+      | TOTAL PRODUCTS ORDERED
+      |--------------------------------------------------------------------------
+      */
+
+      const orderedProducts =
+        await Order.aggregate([
+          {
+            $group: {
+              _id: null,
+
+              total: {
+                $sum: "$quantity",
+              },
+            },
           },
-        },
-      },
-    ]);
+        ]);
 
-    const totalRevenue =
-      revenueResult.length > 0
-        ? revenueResult[0].totalRevenue
-        : 0;
+      /*
+      |--------------------------------------------------------------------------
+      | UNIQUE CUSTOMERS ORDERED
+      |--------------------------------------------------------------------------
+      */
 
-    // RECENT ORDERS
-    const recentOrders = await Order.find()
-      .populate("user", "name email")
-      .sort({ createdAt: -1 })
-      .limit(5);
+      const uniqueCustomers =
+        await Order.distinct(
+          "user"
+        );
 
-    res.status(200).json({
-      success: true,
+      /*
+      |--------------------------------------------------------------------------
+      | RESPONSE
+      |--------------------------------------------------------------------------
+      */
 
-      statistics: {
+      res.json({
+
         totalUsers,
+
         totalProducts,
+
         totalOrders,
-        totalRevenue,
-      },
 
-      recentOrders,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+        totalOrderedProducts:
+          orderedProducts[0]
+            ?.total || 0,
 
+        totalCustomersOrdered:
+          uniqueCustomers.length,
 
-
-// @desc    Get All Users
-// @route   GET /api/admin/users
-// @access  Private/Admin
-
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select("-password");
-
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      users,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-// @desc    Delete User
-// @route   DELETE /api/admin/users/:id
-// @access  Private/Admin
-
-const deleteUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
       });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          error.message,
+      });
+
     }
 
-    await user.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: "User deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-// @desc    Get All Orders
-// @route   GET /api/admin/orders
-// @access  Private/Admin
-
-const getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.find()
-      .populate("user", "name email")
-      .populate("products.product");
-
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      orders,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-// @desc    Update Order Status
-// @route   PUT /api/admin/orders/:id
-// @access  Private/Admin
-
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    order.status = status;
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Order status updated",
-      order,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
+  };
 
 export {
-  getDashboardStats,
-  getAllUsers,
-  deleteUser,
-  getAllOrders,
-  updateOrderStatus,
+  getDashboardAnalytics,
 };

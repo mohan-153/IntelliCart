@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   useEffect,
   useState,
-   useRef,
+  useRef,
 } from "react";
 
 import { useRouter } from "next/navigation";
@@ -47,7 +47,7 @@ export default function Navbar() {
     setSearch] =
     useState("");
 
-const dropdownRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   /*
   |--------------------------------------------------------------------------
@@ -58,7 +58,7 @@ const dropdownRef = useRef(null);
   useEffect(() => {
 
     const userInfo =
-      localStorage.getItem(
+      sessionStorage.getItem(
         "userInfo"
       );
 
@@ -72,42 +72,42 @@ const dropdownRef = useRef(null);
 
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
 
-  const handleClickOutside = (event) => {
+    const handleClickOutside = (event) => {
 
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(
-        event.target
-      )
-    ) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target
+        )
+      ) {
 
-      setShowProfileMenu(false);
+        setShowProfileMenu(false);
 
-    }
+      }
 
-  };
-
-
-
-  document.addEventListener(
-    "mousedown",
-    handleClickOutside
-  );
+    };
 
 
 
-  return () => {
-
-    document.removeEventListener(
+    document.addEventListener(
       "mousedown",
       handleClickOutside
     );
 
-  };
 
-}, []);
+
+    return () => {
+
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+
+    };
+
+  }, []);
 
   /*
   |--------------------------------------------------------------------------
@@ -117,15 +117,15 @@ useEffect(() => {
 
   const logoutHandler = () => {
 
-    localStorage.removeItem(
-      "userInfo"
-    );
+  sessionStorage.clear();
 
-    router.push("/login");
+  setUser(null);
 
-    window.location.reload();
+  setShowProfileMenu(false);
 
-  };
+  router.replace("/");
+
+};
 
 
 
@@ -242,7 +242,7 @@ useEffect(() => {
               /* PROFILE */
 
               <div className="relative"
-              ref={dropdownRef}
+                ref={dropdownRef}
               >
 
                 <button
@@ -329,22 +329,22 @@ useEffect(() => {
                       {user.role ===
                         "admin" && (
 
-                        <button
-                          onClick={() =>
-                            router.push(
-                              "/admin/dashboard"
-                            )
-                          }
-                          className="flex items-center gap-3 w-full hover:bg-gray-100 p-3 rounded-xl"
-                        >
+                          <button
+                            onClick={() =>
+                              router.push(
+                                "/admin/dashboard"
+                              )
+                            }
+                            className="flex items-center gap-3 w-full hover:bg-gray-100 p-3 rounded-xl"
+                          >
 
-                          <FaUserCircle />
+                            <FaUserCircle />
 
-                          Admin Dashboard
+                            Admin Dashboard
 
-                        </button>
+                          </button>
 
-                      )}
+                        )}
 
 
 

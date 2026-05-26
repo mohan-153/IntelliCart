@@ -1,361 +1,254 @@
 "use client";
 
-import { useState } from "react";
-
+import { useState, useEffect, } from "react";
 import { useRouter } from "next/navigation";
-
-import { useDispatch } from "react-redux";
-
-import {
-  FaEnvelope,
-  FaLock,
-  FaShoppingCart,
-} from "react-icons/fa";
+import { Eye, EyeOff } from "lucide-react";
 
 import API from "@/services/axios";
 
-import { loginSuccess } from "@/redux/slices/authSlice";
-
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function LoginPage() {
-
   const router = useRouter();
 
-  const dispatch = useDispatch();
+  useEffect(() => {
 
+    window.history.pushState(
+      null,
+      "",
+      window.location.href
+    );
 
+    window.onpopstate = () => {
 
-  /*
-  |--------------------------------------------------------------------------
-  | STATE
-  |--------------------------------------------------------------------------
-  */
+      window.history.go(1);
 
-  const [formData, setFormData] =
-    useState({
+    };
+
+  }, []);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  const validateForm = () => {
+    let valid = true;
+    let newErrors = {
       email: "",
       password: "",
-    });
+    };
 
+    // Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-
-  const [loading, setLoading] =
-    useState(false);
-
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE CHANGE
-  |--------------------------------------------------------------------------
-  */
-
-  const handleChange = (e) => {
-
-    setFormData({
-      ...formData,
-
-      [e.target.name]:
-        e.target.value,
-    });
-
-  };
-
-
-
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE SUBMIT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleSubmit = async (e) => {
-
-    e.preventDefault();
-
-    try {
-
-      setLoading(true);
-
-
-
-      const { data } =
-        await API.post(
-          "/auth/login",
-          formData
-        );
-
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | SAVE USER
-      |--------------------------------------------------------------------------
-      */
-
-      localStorage.setItem(
-        "userInfo",
-        JSON.stringify(data)
-      );
-
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | REDUX LOGIN
-      |--------------------------------------------------------------------------
-      */
-
-      dispatch(
-        loginSuccess(data)
-      );
-
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | SUCCESS ALERT
-      |--------------------------------------------------------------------------
-      */
-
-      alert(
-        "Login Successful"
-      );
-
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | ADMIN REDIRECT
-      |--------------------------------------------------------------------------
-      */
-
-      if (
-        data.role === "admin"
-      ) {
-
-        router.push(
-          "/admin/dashboard"
-        );
-
-      } else {
-
-        /*
-        |--------------------------------------------------------------------------
-        | USER HOME PAGE
-        |--------------------------------------------------------------------------
-        */
-
-        router.push("/");
-
-      }
-
-    } catch (error) {
-
-      alert(
-        error.response?.data
-          ?.message ||
-          "Invalid credentials"
-      );
-
-    } finally {
-
-      setLoading(false);
-
+    if (!formData.email) {
+      newErrors.email = "⚠ Enter Email";
+      valid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "⚠ Enter Valid Email";
+      valid = false;
     }
 
+    // Password Validation
+    if (!formData.password) {
+      newErrors.password = "⚠ Enter Password";
+      valid = false;
+    } else if (formData.password.length < 6) {
+      newErrors.password = "⚠ Password must be at least 6 characters";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    return valid;
   };
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
 
+    setErrors({
+      ...errors,
+      [e.target.name]: "",
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    try {
+      const res = await API.post("/auth/login", formData);
+
+      toast.success("Login Successful");
+
+      sessionStorage.clear();
+
+      sessionStorage.setItem(
+        "token",
+        res.data.token
+      );
+
+      sessionStorage.setItem(
+        "userInfo",
+        JSON.stringify(res.data.user)
+      );
+
+      setTimeout(() => {
+        router.replace("/");
+      }, 1000);
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Invalid credentials";
+
+      toast.error(message);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <ToastContainer position="top-right" autoClose={3000} />
 
-      <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center mb-6">
+          Login
+        </h2>
 
-        {/* LEFT SECTION */}
+        <form onSubmit={handleSubmit} className="space-y-5">
 
-        <div className="bg-black text-white p-12 hidden lg:flex flex-col justify-center">
+          {/* Email */}
+          {/* EMAIL */}
 
-          <div className="flex items-center gap-4 mb-8">
+          <div className="mb-5">
 
-            <div className="bg-white text-black p-4 rounded-2xl text-3xl">
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter Email"
+              value={formData.email}
+              onChange={(e) => {
 
-              <FaShoppingCart />
+                handleChange(e);
 
-            </div>
+                const emailRegex =
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-            <h1 className="text-4xl font-bold">
-              IntelliCart
-            </h1>
+                if (
+                  e.target.value &&
+                  !emailRegex.test(
+                    e.target.value
+                  )
+                ) {
 
-          </div>
+                  setErrors((prev) => ({
+                    ...prev,
+                    email:
+                      "⚠ Please enter a valid email address",
+                  }));
 
-          <h2 className="text-5xl font-bold leading-tight">
+                }
 
-            Welcome Back
+              }}
+              className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+            />
 
-          </h2>
+            {errors.email && (
 
-          <p className="text-gray-300 mt-6 text-lg leading-8">
+              <p className="text-red-500 text-sm mt-2">
 
-            Login to access your
-            personalized shopping
-            experience, orders,
-            analytics, and AI
-            powered commerce
-            platform.
-
-          </p>
-
-        </div>
-
-
-
-        {/* RIGHT SECTION */}
-
-        <div className="p-10 lg:p-14">
-
-          <div className="max-w-md mx-auto">
-
-            <h1 className="text-4xl font-bold mb-3">
-              Login
-            </h1>
-
-            <p className="text-gray-500 mb-10">
-              Access your account
-            </p>
-
-
-
-            {/* FORM */}
-
-            <form
-              onSubmit={
-                handleSubmit
-              }
-              className="space-y-6"
-            >
-
-              {/* EMAIL */}
-
-              <div>
-
-                <label className="block text-sm font-semibold mb-2">
-
-                  Email Address
-
-                </label>
-
-                <div className="relative">
-
-                  <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={
-                      formData.email
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    required
-                    className="w-full border border-gray-300 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-2 focus:ring-black"
-                  />
-
-                </div>
-
-              </div>
-
-
-
-              {/* PASSWORD */}
-
-              <div>
-
-                <label className="block text-sm font-semibold mb-2">
-
-                  Password
-
-                </label>
-
-                <div className="relative">
-
-                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    value={
-                      formData.password
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    required
-                    className="w-full border border-gray-300 rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-2 focus:ring-black"
-                  />
-
-                </div>
-
-              </div>
-
-
-
-              {/* LOGIN BUTTON */}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:bg-gray-800 transition"
-              >
-
-                {loading
-                  ? "Logging in..."
-                  : "Login"}
-
-              </button>
-
-            </form>
-
-
-
-            {/* REGISTER */}
-
-            <div className="mt-8 text-center">
-
-              <p className="text-gray-600">
-
-                Don't have an
-                account?
+                {errors.email}
 
               </p>
 
-              <button
-                onClick={() =>
-                  router.push(
-                    "/register"
-                  )
-                }
-                className="mt-3 text-black font-bold hover:underline"
-              >
-
-                Create Account
-
-              </button>
-
-            </div>
+            )}
 
           </div>
 
-        </div>
+          {/* Password */}
+          <div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+              />
 
+              <button
+                type="button"
+                className="absolute right-3 top-3 text-gray-600"
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={20} />
+                ) : (
+                  <Eye size={20} />
+                )}
+              </button>
+            </div>
+
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Forgot Password */}
+          <div className="text-right">
+            <button
+              type="button"
+              className="text-blue-600 hover:underline text-sm"
+              onClick={() => router.push("/forgot-password")}
+            >
+              Forgot Password?
+            </button>
+          </div>
+
+          {/* Login Button */}
+          {/* Login Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
+          >
+            Login
+          </button>
+
+          {/* SIGN UP OPTION */}
+          <div className="text-center pt-2">
+
+            <p className="text-gray-600 text-sm">
+              Don't have an account?{" "}
+
+              <button
+                type="button"
+                onClick={() => router.push("/register")}
+                className="text-blue-600 hover:underline font-semibold"
+              >
+                Sign Up
+              </button>
+
+            </p>
+
+          </div>
+        </form>
       </div>
-
     </div>
   );
 }
